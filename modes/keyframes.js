@@ -13,6 +13,12 @@ function lerp(a, b, t) {
 	return Math.floor(a + t * (b - a))
 }
 
+const util = require('../util.js')
+
+let audioMap
+let audioMapL
+
+
 // the argument has 5 fields: nextWidth, nextHeight, lastWidth, lastHeight (which are pretty self-explanatory),
 // and "t", which ranges from 0 to 1 and is equal to the fraction of the current keyframe's duration that has already
 // taken place
@@ -28,18 +34,27 @@ const interpolationModes = {
 			width: i.lastWidth,
 			height: i.lastHeight,
 		}
+	},
+	"audioshutter": (info) => {
+		const { percentMax } = audioMap[Math.max(Math.min(Math.floor((info.frame / (info.frameCount - 1)) * audioMapL), audioMapL), 0)]
+		return {
+			width: info.frame < 0 ? info.lastWidth : Math.floor(Math.abs(info.lastWidth * percentMax)),
+			height: info.frame < 0 ? info.lastHeight : Math.floor(Math.abs(info.lastHeight * percentMax)),
+		}
 	}
 }
 
 module.exports = {
 	setup: async (info) => {
+		audioMap = await util.getAudioLevelMap(info.videoPath)
+		audioMapL = audioMap.length - 1
 		console.log(`${localizeString('parsing_keyframes', { file: info.keyFrameFile })}`)
 		await parseKeyFrameFile(info.keyFrameFile, info.frameRate, info.maxWidth, info.maxHeight)
 	},
 	getFrameBounds: (info) => {
 		if (lastKf !== keyFrames.length - 1 && info.frame >= keyFrames[lastKf + 1].time) {
 			lastKf++
-		}
+		} 
 
 		// if there is still a keyframe to skip, there were multiple on one frame. consume those and warn the user.
 		while (lastKf !== keyFrames.length - 1 && info.frame >= keyFrames[lastKf + 1].time) {
@@ -57,7 +72,7 @@ module.exports = {
 		const [lastWidth, lastHeight] = [keyFrames[lastKf].width, keyFrames[lastKf].height]
 		const [nextWidth, nextHeight] = lastKf === keyFrames.length - 1 ? [lastWidth, lastHeight] : [keyFrames[lastKf + 1].width, keyFrames[lastKf + 1].height]
 
-		const interpolationArg = { t, lastWidth, lastHeight, nextWidth, nextHeight }
+		const interpolationArg = { t, lastWidth, lastHeight, nextWidth, nextHeight, frame: info.frame, frameCount: info.frameCount}
 
 		const interpolationMode = keyFrames[lastKf].interpolation.toLowerCase()
 		if (!interpolationModes[interpolationMode])
