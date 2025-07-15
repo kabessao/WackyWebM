@@ -1,4 +1,24 @@
-# Important: As of 14 March 2024, WackyWebM has been discontinued due to Discord patching the use of these video files within the client. Thank you for using WackyWebM!
+~# Important: As of 14 March 2024, WackyWebM has been discontinued due to Discord patching the use of these video files within the client. Thank you for using WackyWebM!~
+# IT STILL WORKS!
+
+A friend of mine sent me a wacky webm that still works in discord, so after fidling around with this tool to understand why that one was working and not the others I've found 3 important things: 
+* The video has to be small. Whenever you post a video, discord tries to adapt the viewport to the video's size when the video is small, but defaults to a set size when the video is too big
+* The resize should keep the original aspect ratio. Resizing only vertically or horizontally doesn't work
+* The video has to be flagged as a spoiler
+
+With these 3 points the wacky videos still work like they've always done.
+
+Aditionally, I've added 2 functions to this project: 
+* `audiobouncerandshutter`: kind of a huge name, but this is to keep in line with the 3 rules we have to follow
+* `audioshutter` in the keyframe option: it allows you enable/disable the audioshuttle in certain parts of the video
+
+Here's an example of a working keyframe file: 
+```
+3.13, 256,144
+3.14, 256,144, audioshutter
+39.15, 256,144
+```
+
 
 # WackyWebM
 
