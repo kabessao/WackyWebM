@@ -1,4 +1,6 @@
 #!/bin/sh
+#! nix-shell -i bash -p ffmpeg bash nodejs
+
 # Print Ascii Art
 echo "
  __          __        _       __          __  _     __  __
@@ -14,13 +16,27 @@ echo "
 function checktools
 {
 	echo "Testing for FFmpeg, FFprobe, Node and npm..."
+
+  hasnix=0
+  if command -v nix-shell &>/dev/null; then echo "nix-shell found!" && hasnix=1; fi
+
 	alldependencies=1
 	if ! command -v ffmpeg &>/dev/null; then echo "FFmpeg not found" && alldependencies=0; fi
 	if ! command -v ffprobe &>/dev/null; then echo "FFprobe not found" && alldependencies=0; fi
 	if ! command -v node &>/dev/null; then echo "Node not found" && alldependencies=0; fi
 	if ! command -v npm &>/dev/null; then echo "npm not found" && alldependencies=0; fi
 
-	if [ "$alldependencies" = "0" ]; then echo "If you believe this to be an error, run \"./run.sh --notoolcheck\"." && read -p "Press any key to exit." -n 1 -r && exit 1; fi
+
+  if [ "$alldependencies" = "0" ] && [ "$hasnix" = "1" ] ; then
+    echo "Attempting to install dependencies through nix-shell" 
+    nix-shell $0
+    exit $?
+  fi
+
+	if [ "$alldependencies" = "0" ]; then
+    echo "If you believe this to be an error, run \"./run.sh --notoolcheck\"." 
+    read -p "Press any key to exit." -n 1 -r && exit 1;
+  fi
 }
 
 if [ "$1" != "--notoolcheck" ]; then checktools && echo "No issues found!"; else echo "Skipping Tool check..."; fi
